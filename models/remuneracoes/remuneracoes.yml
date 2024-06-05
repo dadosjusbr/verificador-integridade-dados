@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: remuneracoes
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - id
+            - id_contracheque
+            - orgao
+            - mes
+            - ano
+          config: &common_config
+            where: orgao = '{{ env_var("AID") }}' and ano = {{ env_var("YEAR") }}
+      - dbt_expectations.expect_table_aggregation_to_equal_other_table:
+            expression: sum(valor)
+            compare_model: ref("coletas")
+            compare_expression: sum((sumario->'remuneracao_base'->>'total')::numeric)
+            row_condition: tipo = 'R/B'
+            compare_row_condition: atual = true and id_orgao = '{{ env_var("AID") }}' and ano = {{ env_var("YEAR") }}
+            tolerance: 0.01
+            config: *common_config
+      - dbt_expectations.expect_table_aggregation_to_equal_other_table:
+            expression: sum(valor)
+            compare_model: ref("coletas")
+            compare_expression: sum((sumario->'outras_remuneracoes'->>'total')::numeric)
+            row_condition: tipo = 'R/O'
+            compare_row_condition: atual = true and id_orgao = '{{ env_var("AID") }}' and ano = {{ env_var("YEAR") }}
+            tolerance: 0.01
+            config: *common_config
+      - dbt_expectations.expect_table_aggregation_to_equal_other_table:
+            expression: sum(valor)
+            compare_model: ref("coletas")
+            compare_expression: sum((sumario->'descontos'->>'total')::numeric)
+            row_condition: tipo = 'D'
+            compare_row_condition: atual = true and id_orgao = '{{ env_var("AID") }}' and ano = {{ env_var("YEAR") }}
+            tolerance: 0.01
+            config: *common_config
+      - dbt_expectations.expect_table_row_count_to_be_between:
+            max_value: 13
+            group_by: [id_contracheque, mes]
+            row_condition: "tipo != 'D'"
+            config: *common_config
