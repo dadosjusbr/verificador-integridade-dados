@@ -6,16 +6,24 @@ from tqdm import tqdm
 import os
 import csv
 import shutil
+from dotenv import load_dotenv
 
+load_dotenv()
+
+where = ''
+if 'YEARS' in os.environ:
+    years = os.getenv('YEARS').replace(" ", ", ")
+    if years != '':
+        where = f"and ano IN ({years})"
 
 conn = pg.get_connection()
 categorias_por_orgao = pg.consultar_db(
     conn,
-    """select orgao, mes, ano, SUM(CASE WHEN categoria = 'direitos-pessoais' THEN valor ELSE 0 END) as direitos_pessoais, 
+    f"""select orgao, mes, ano, SUM(CASE WHEN categoria = 'direitos-pessoais' THEN valor ELSE 0 END) as direitos_pessoais, 
     SUM(CASE WHEN categoria = 'direitos-eventuais' THEN valor ELSE 0 END) as direitos_eventuais,
     SUM(CASE WHEN categoria = 'indenizações' THEN valor ELSE 0 END) as indenizacoes,
     SUM(CASE WHEN tipo = 'D' THEN valor ELSE 0 END) as total_descontos from remuneracoes r 
-    where orgao not like 'mp%' group by orgao, mes, ano""",
+    where orgao not like 'mp%' {where} group by orgao, mes, ano""",
 )
 
 # Abre o arquivo para escrita

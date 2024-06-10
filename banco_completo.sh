@@ -12,3 +12,7 @@ for AID in ${AID_LIST[*]}
             mv target/run_results.json logs/${AID}-${YEAR}.json
         done
     done
+
+YEARS=${YEARS} python3 src/alertas_percentuais.py
+
+YEARS=${YEARS} python3 src/compara_banco_cnj.py
