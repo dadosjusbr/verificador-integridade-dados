@@ -13,6 +13,8 @@ for AID in ${AID_LIST[*]}
         done
     done
 
+python3 src/resumo_testes.py
+
 YEARS=${YEARS} python3 src/alertas_percentuais.py
 
 YEARS=${YEARS} python3 src/compara_banco_cnj.py
