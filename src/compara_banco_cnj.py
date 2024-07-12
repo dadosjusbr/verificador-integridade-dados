@@ -23,7 +23,7 @@ categorias_por_orgao = pg.consultar_db(
     SUM(CASE WHEN categoria = 'direitos-eventuais' THEN valor ELSE 0 END) as direitos_eventuais,
     SUM(CASE WHEN categoria = 'indenizações' THEN valor ELSE 0 END) as indenizacoes,
     SUM(CASE WHEN tipo = 'D' THEN valor ELSE 0 END) as total_descontos from remuneracoes r 
-    where orgao not like 'mp%' {where} group by orgao, mes, ano""",
+    where orgao not like 'mp%' and orgao != 'stf' {where} group by orgao, mes, ano""",
 )
 
 # Abre o arquivo para escrita

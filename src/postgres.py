@@ -1,8 +1,6 @@
 import os
 import psycopg2
-from dotenv import load_dotenv
 
-load_dotenv()
 
 def get_connection():
     try:
@@ -11,12 +9,12 @@ def get_connection():
             user=os.getenv('POSTGRES_USER'),
             password=os.getenv('POSTGRES_PASSWORD'),
             host=os.getenv('POSTGRES_HOST'),
-            port=5432,
+            port=os.getenv('POSTGRES_PORT'),
         )
         if conn:
             return conn
-    except:
-        print("Connection to the PostgreSQL encountered and error.")
+    except Exception as e:
+        print(f"Connection to the PostgreSQL encountered and error: {e}")
         os._exit(1)
 
 def consultar_db(conn, sql):
@@ -27,3 +25,15 @@ def consultar_db(conn, sql):
     for rec in recset:
         registros.append(rec)
     return registros
+
+def run_db(conn, sql):
+    cur = conn.cursor()
+    try:
+        cur.execute(sql)
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print("Error: %s" % error)
+        conn.rollback()
+        cur.close()
+        return 1
+    cur.close()
