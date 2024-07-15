@@ -72,7 +72,9 @@ def contracheque_tests(resource, summary):
                 f"('{court}', {month}, {year}, '{timestamp}', '{key}', '{json.dumps(result)}')"
             )
 
-    result = expect_remuneration_to_equal_summary(resource.path, summary)
+    df = pd.read_csv(resource.path, decimal=",", delimiter=";")
+
+    result = expect_remuneration_to_equal_summary(df, summary)
     if result is not None:
         alerts.append(
             f"('{court}', {month}, {year}, '{timestamp}', '{result[0]}', '{json.dumps(result[1])}')"
@@ -107,7 +109,10 @@ def remuneracao_tests(resource, summary):
                 f"('{court}', {month}, {year}, '{timestamp}', '{key}', '{json.dumps(result)}')"
             )
 
-    result = entries_by_member_check(resource.path)
+    df = pd.read_csv(resource.path, decimal=",", delimiter=";")
+
+    result = entries_by_member_check(df)
+    
     if result is not None:
         alerts.append(
             f"('{court}', {month}, {year}, '{timestamp}', '{result[0]}', '{json.dumps(result[1])}')"
@@ -120,7 +125,7 @@ def remuneracao_tests(resource, summary):
     ]
 
     for check in checks:
-        result = check(resource.path, summary)
+        result = check(df, summary)
         if result is not None:
             alerts.append(
                 f"('{court}', {month}, {year}, '{timestamp}', '{result[0]}', '{json.dumps(result[1])}')"
@@ -148,7 +153,7 @@ def main():
             "INSERT INTO alertas (orgao, mes, ano, timestamp, id_alerta, detalhes) VALUES "
             + ",".join(alerts)
         )
-        
+
         conn = postgres.get_connection()
         postgres.run_db(conn, command)
 

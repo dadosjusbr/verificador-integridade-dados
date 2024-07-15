@@ -78,25 +78,22 @@ class non_negative_check(Check):
             yield errors.CellError.from_row(row, note=note, field_name="remuneracao")
 
 
-def expect_remuneration_to_equal_summary(csv_filename, data):
-    dt = pd.read_csv(csv_filename, decimal=",", delimiter=";")
-
+def expect_remuneration_to_equal_summary(df, data):
     if "total" not in data["remuneracoes"]:
         data["remuneracoes"]["total"] = 0
 
-    if abs(dt.remuneracao.sum() - data["remuneracoes"]["total"]) > 0.01:
+    if abs(df.remuneracao.sum() - data["remuneracoes"]["total"]) > 0.01:
         note = f"expect_remuneration_to_equal_summary"
         result = {
             "banco_de_dados": data["remuneracoes"]["total"],
-            "datapackage": dt.remuneracao.sum(),
+            "datapackage": df.remuneracao.sum(),
         }
         return [note, result]
     return None
 
 
-def expect_R_B_to_equal_summary(csv_filename, data):
-    dt = pd.read_csv(csv_filename, decimal=",", delimiter=";")
-    rb_soma = dt[dt.tipo == "R/B"].valor.sum()
+def expect_R_B_to_equal_summary(df, data):
+    rb_soma = df[df.tipo == "R/B"].valor.sum()
 
     if "total" not in data["remuneracao_base"]:
         data["remuneracao_base"]["total"] = 0
@@ -111,9 +108,8 @@ def expect_R_B_to_equal_summary(csv_filename, data):
     return None
 
 
-def expect_R_O_to_equal_summary(csv_filename, data):
-    dt = pd.read_csv(csv_filename, decimal=",", delimiter=";")
-    ro_soma = dt[dt.tipo == "R/O"].valor.sum()
+def expect_R_O_to_equal_summary(df, data):
+    ro_soma = df[df.tipo == "R/O"].valor.sum()
 
     if "total" not in data["outras_remuneracoes"]:
         data["outras_remuneracoes"]["total"] = 0
@@ -128,9 +124,8 @@ def expect_R_O_to_equal_summary(csv_filename, data):
     return None
 
 
-def expect_D_to_equal_summary(csv_filename, data):
-    dt = pd.read_csv(csv_filename, decimal=",", delimiter=";")
-    d_soma = dt[dt.tipo == "D"].valor.sum()
+def expect_D_to_equal_summary(df, data):
+    d_soma = df[df.tipo == "D"].valor.sum()
 
     if "total" not in data["descontos"]:
         data["descontos"]["total"] = 0
@@ -146,10 +141,9 @@ def expect_D_to_equal_summary(csv_filename, data):
     return None
 
 
-def entries_by_member_check(csv_filename):
-    dt = pd.read_csv(csv_filename, decimal=",", delimiter=";")
+def entries_by_member_check(df):
     df_count = (
-        dt[(dt.tipo != "D") & (dt.valor != 0)]
+        df[(df.tipo != "D") & (df.valor != 0)]
         .groupby(["id_contracheque"])
         .size()
         .reset_index(name="contagem")
@@ -161,8 +155,8 @@ def entries_by_member_check(csv_filename):
         # Criar a lista de casos
         casos = df_count.apply(
             lambda row: {
-                "id_contracheque": row["id_contracheque"],
-                "lancamentos": row["contagem"],
+                "id_contracheque": int(row["id_contracheque"]),
+                "lancamentos": int(row["contagem"]),
             },
             axis=1,
         ).tolist()
