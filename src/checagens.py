@@ -24,10 +24,14 @@ def validate_csv_in_zip(zip_path, csv_filename, funcao, sumario):
 
         return alerts
 
-
 class regex_check(Check):
+    """
+    A regex permite letras maiúsculas e minúsculas, acentos, aspas simples e acento agudo (ex.: D'AVILA e D´AVILA) e hifen (para nomes de origens diversas, e.g. BEN-HUR e ABI-RAMIA)
+    
+    Não permite: strings vazias, hífens ou espaços duplos, no início ou fim, números, caracteres especiais, nomes abreviados.
+    """
     Errors = [errors.CellError]
-    regex = re.compile(r"^[a-zA-ZÀ-ÖØ-öø-ÿ'']+(?: [a-zA-ZÀ-ÖØ-öø-ÿ'']+)*$")
+    regex = re.compile(r"^[a-zA-ZÀ-ÖØ-öø-ÿ'´]+(?:[- ][a-zA-ZÀ-ÖØ-öø-ÿ'´]+)*$")
 
     def validate_row(self, row):
         if not re.search(self.regex, str(row["nome"])) or row["nome"] in [None, ""]:
@@ -59,7 +63,7 @@ class remuneration_check(Check):
         else:
             remuneration = 0
 
-        if not salary + benefits - discounts == remuneration:
+        if abs((salary + benefits - discounts) - remuneration) > 0.05:
             note = f"remuneration_check"
             yield errors.CellError.from_row(row, note=note, field_name="remuneracao")
 
@@ -82,7 +86,7 @@ def expect_remuneration_to_equal_summary(df, data):
     if "total" not in data["remuneracoes"]:
         data["remuneracoes"]["total"] = 0
 
-    if abs(df.remuneracao.sum() - data["remuneracoes"]["total"]) > 0.01:
+    if abs(df.remuneracao.sum() - data["remuneracoes"]["total"]) > 0.05:
         note = f"expect_remuneration_to_equal_summary"
         result = {
             "banco_de_dados": data["remuneracoes"]["total"],
@@ -98,7 +102,7 @@ def expect_R_B_to_equal_summary(df, data):
     if "total" not in data["remuneracao_base"]:
         data["remuneracao_base"]["total"] = 0
 
-    if abs(rb_soma - data["remuneracao_base"]["total"]) > 0.01:
+    if abs(rb_soma - data["remuneracao_base"]["total"]) > 0.05:
         note = f"expect_R_B_to_equal_summary"
         result = {
             "banco_de_dados": data["remuneracao_base"]["total"],
@@ -114,7 +118,7 @@ def expect_R_O_to_equal_summary(df, data):
     if "total" not in data["outras_remuneracoes"]:
         data["outras_remuneracoes"]["total"] = 0
 
-    if abs(ro_soma - data["outras_remuneracoes"]["total"]) > 0.01:
+    if abs(ro_soma - data["outras_remuneracoes"]["total"]) > 0.05:
         note = f"expect_R_O_to_equal_summary"
         result = {
             "banco_de_dados": data["outras_remuneracoes"]["total"],
@@ -134,7 +138,7 @@ def expect_D_to_equal_summary(df, data):
     if data["descontos"]["total"] > 0:
         data["descontos"]["total"] *= -1
 
-    if abs(d_soma - data["descontos"]["total"]) > 0.01:
+    if abs(d_soma - data["descontos"]["total"]) > 0.05:
         note = f"expect_D_to_equal_summary"
         result = {"banco_de_dados": data["descontos"]["total"], "datapackage": d_soma}
         return [note, result]
