@@ -24,7 +24,7 @@ models:
           - not_null:
               config: *common_config
           - dbt_expectations.expect_column_values_to_match_regex:
-              regex: "^[a-zA-ZÀ-ÖØ-öø-ÿ'']+(?: [a-zA-ZÀ-ÖØ-öø-ÿ'']+)*$"
+              regex: "^[a-zA-ZÀ-ÖØ-öø-ÿ''´]+(?:[- ][a-zA-ZÀ-ÖØ-öø-ÿ''´]+)*$"
               config: *common_config
           - dbt_utils.not_constant:
               config: *common_config
